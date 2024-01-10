@@ -7,7 +7,6 @@
 #include "TLorentzVector.h"
 #include <iostream> 
 #include <fstream>
-#include <numeric>
 using namespace std;
 
 struct PairedMuonIdx {
@@ -54,22 +53,6 @@ void myntuple::Loop()
 	TH1F* myDiMuon2mass = new TH1F("myDiMuon2mass","myDiMuon2mass",80,2.7,3.5);
 	TH1F* myFourMuonmass = new TH1F("myFourMuonmass","myFourMuonmass",360,6,15);
 
-	TH1F* myDiMuon1mass_PT = new TH1F("myDiMuon1mass_PT","myDiMuon1mass",80,2.7,3.5);
-	TH1F* myDiMuon2mass_PT = new TH1F("myDiMuon2mass_PT","myDiMuon2mass",80,2.7,3.5);
-	TH1F* myFourMuonmass_PT = new TH1F("myFourMuonmass_PT","myFourMuonmass",360,6,15);
-
-	TH1F* myDiMuon1mass_eta = new TH1F("myDiMuon1mass_eta","myDiMuon1mass",80,2.7,3.5);
-	TH1F* myDiMuon2mass_eta = new TH1F("myDiMuon2mass_eta","myDiMuon2mass",80,2.7,3.5);
-	TH1F* myFourMuonmass_eta = new TH1F("myFourMuonmass_eta","myFourMuonmass",360,6,15);
-
-	TH1F* myDiMuon1mass_chg = new TH1F("myDiMuon1mass_chg","myDiMuon1mass",80,2.7,3.5);
-	TH1F* myDiMuon2mass_chg = new TH1F("myDiMuon2mass_chg","myDiMuon2mass",80,2.7,3.5);
-	TH1F* myFourMuonmass_chg = new TH1F("myFourMuonmass_chg","myFourMuonmass",360,6,15);
-
-	TH1F* myDiMuon1mass_mass = new TH1F("myDiMuon1mass_mass","myDiMuon1mass",80,2.7,3.5);
-	TH1F* myDiMuon2mass_mass = new TH1F("myDiMuon2mass_mass","myDiMuon2mass",80,2.7,3.5);
-	TH1F* myFourMuonmass_mass = new TH1F("myFourMuonmass_mass","myFourMuonmass",360,6,15);
-
 	const double MUON_MASS = 0.1056583745; //GeV
 	const double JPSI_MASS = 3.096900; //GeV
 
@@ -96,9 +79,7 @@ void myntuple::Loop()
 				TrigThreeMuonJpsi = true;
 			}
 		} //end of trigger loop
-		if (!TrigThreeMuonJpsi3p5mu2 && !TrigThreeMuonJpsi){
-			continue;
-		}
+
 		for (unsigned int myFourMuIdx = 0; myFourMuIdx < nMyFourMuon; myFourMuIdx++) {
 			TLorentzVector myFourMuonP4;
 			myFourMuonP4.SetXYZM((*MyFourMuonPx)[myFourMuIdx],(*MyFourMuonPy)[myFourMuIdx], (*MyFourMuonPz)[myFourMuIdx], (*MyFourMuonMass)[myFourMuIdx]);
@@ -130,9 +111,6 @@ void myntuple::Loop()
 			RawmuinFourMuFM = Rawmu; RawmuinFourMuFM.Boost(-myFourMuonP4.BoostVector());
 			rawMuinFourMuFMp4vect.push_back(RawmuinFourMuFM);
 
-			// int muonPtPass = 0;
-			// for(unsigned int )
-
 			vector<TLorentzVector> fitMup4vect;
 			TLorentzVector Fitmu;
 			//Muon From X Fit:        
@@ -163,137 +141,82 @@ void myntuple::Loop()
 			float DiMuonMass1 = 0.; 
 			float DiMuonMass2 = 0.;
                         double m4Muon = 0.;
-
-
-
+			// std::cout << "no cuts" <<std::endl;
 			if (1
 					// soft muon: tracker muon + 1 hit in the muon system 
 					&& myNumPatSoftMuon >= 4 
 					// requiring all muons to come from the same vertex
 					&& (*MyFourMuonVtxCL)[myFourMuIdx] >= 0.005     
-					// Here add the selections!
-					&& (TrigThreeMuonJpsi3p5mu2 || TrigThreeMuonJpsi) == 1
-					// &&  == 1
-
-					// && accumulate(fitMuCharge.begin(), fitMuCharge.end(), 0) == 0
+					// Here add the selections! 
+                    && (TrigThreeMuonJpsi3p5mu2 == 1 || TrigThreeMuonJpsi == 1)
+					
 					&& (fitMuCharge[0] + fitMuCharge[1] + fitMuCharge[2] + fitMuCharge[3] == 0)
-			) {
+
+                    && rawMup4vect[0].Pt() >= 2.
+                    && rawMup4vect[1].Pt() >= 2.
+                    && rawMup4vect[2].Pt() >= 2.
+                    && rawMup4vect[3].Pt() >= 2.
+
+                    && abs(rawMup4vect[0].Eta()) <= 2.4
+                    && abs(rawMup4vect[1].Eta()) <= 2.4
+                    && abs(rawMup4vect[2].Eta()) <= 2.4
+                    && abs(rawMup4vect[3].Eta()) <= 2.4
+
+				) {
+					// std::cout << "first pass" <<std::endl;
 				for (int mypidx = 0; mypidx < 3; mypidx++)  {
 					int muIdxp11, muIdxp12, muIdxp21, muIdxp22;
 					muIdxp11 = myCombIdx[mypidx].p11; muIdxp12 = myCombIdx[mypidx].p12; muIdxp21 = myCombIdx[mypidx].p21; muIdxp22 = myCombIdx[mypidx].p22;
 
+
 					if(1
                         // Here, require the muon pairs to have muons with opposite charges
-						 && fitMuCharge[muIdxp11] + fitMuCharge[muIdxp12] == 0 
-						 && fitMuCharge[muIdxp21] + fitMuCharge[muIdxp22] == 0
-					  ) {
-						DiMuonMass1 = (fitMup4vect[muIdxp11] + fitMup4vect[muIdxp12]).M();
+                        && fitMuCharge[muIdxp11] + fitMuCharge[muIdxp12] == 0 
+						&& fitMuCharge[muIdxp21] + fitMuCharge[muIdxp22] == 0
+					  )
+					{
+						// std::cout << "second pass" <<std::endl;
+						// Modify the DiMuonMass expression appropriatly. 
+						// Use the fitMup4vect and the muIdxpXY indexes defined above.
+                        DiMuonMass1 = (fitMup4vect[muIdxp11] + fitMup4vect[muIdxp12]).M();
 						DiMuonMass2 = (fitMup4vect[muIdxp21] + fitMup4vect[muIdxp22]).M();
 						// calculate the 4 muon mass:  M(µ1µ2µ3µ4)-M(µ1µ2)-M(µ3µ4)+2*M(J/psi)  
-						m4Muon 	= (
-							(fitMup4vect[muIdxp11] + fitMup4vect[muIdxp12] + fitMup4vect[muIdxp21] + fitMup4vect[muIdxp22]).M()
-							- (fitMup4vect[muIdxp11] + fitMup4vect[muIdxp12]).M() - (fitMup4vect[muIdxp21] + fitMup4vect[muIdxp22]).M()
-							+ 2*JPSI_MASS 
-							);
-						myDiMuon1mass_chg->Fill(DiMuonMass1);
-						myDiMuon2mass_chg->Fill(DiMuonMass2);
-						myFourMuonmass_chg->Fill(m4Muon);
+						
+
+						myDiMuon1mass->Fill(DiMuonMass1);
+						myDiMuon2mass->Fill(DiMuonMass2);
 
 						if (1
-							&& rawMup4vect[0].Pt() >= 2.
-							&& rawMup4vect[1].Pt() >= 2.
-							&& rawMup4vect[2].Pt() >= 2.
-							&& rawMup4vect[3].Pt() >= 2.
-						){
-							myDiMuon1mass_PT->Fill(DiMuonMass1);
-							myDiMuon2mass_PT->Fill(DiMuonMass2);
-							myFourMuonmass_PT->Fill(m4Muon);
-
-							if (1
-								&& abs(rawMup4vect[0].Eta()) <= 2.4
-								&& abs(rawMup4vect[1].Eta()) <= 2.4
-								&& abs(rawMup4vect[2].Eta()) <= 2.4
-								&& abs(rawMup4vect[3].Eta()) <= 2.4
-							){
-								myDiMuon1mass_eta->Fill(DiMuonMass1);
-								myDiMuon2mass_eta->Fill(DiMuonMass2);
-								myFourMuonmass_eta->Fill(m4Muon);
-
 								// Here require that each DiMuonMass is in the appropriate mass range [2.95,3.25] GeV
-								if (1
-									&& DiMuonMass1 <= 3.25
-									&& DiMuonMass1 >= 2.95
-									&& DiMuonMass2 <= 3.25
-									&& DiMuonMass2 >= 2.95
-								) {
-									myDiMuon1mass_mass->Fill(DiMuonMass1);
-									myDiMuon2mass_mass->Fill(DiMuonMass2);
-									myFourMuonmass_mass->Fill(m4Muon);
-								}
-							}
+                                && DiMuonMass1 <= 3.25
+                                && DiMuonMass1 >= 2.95
+                                && DiMuonMass2 <= 3.25
+                                && DiMuonMass2 >= 2.95
+														   )
+						{
+							// calculate the 4 muon mass:  M(µ1µ2µ3µ4)-M(µ1µ2)-M(µ3µ4)+2*M(J/psi)  
+							m4Muon 	= (
+							(fitMup4vect[muIdxp11] + fitMup4vect[muIdxp12] + fitMup4vect[muIdxp21] + fitMup4vect[muIdxp22]).M()
+							- DiMuonMass1 - DiMuonMass2
+							+ 2*JPSI_MASS );
+
+							myFourMuonmass->Fill(m4Muon);
+
+							myoutputfile
+								<< std::fixed
+								<< m4Muon
+								<< endl;
+
 						}
 					}
+
 				}
 			}
-		}}
-			// if (1
-			// 		// soft muon: tracker muon + 1 hit in the muon system 
-			// 		&& myNumPatSoftMuon >= 4 
-			// 		// requiring all muons to come from the same vertex
-			// 		&& (*MyFourMuonVtxCL)[myFourMuIdx] >= 0.005     
-			// 		// Here add the selections!
-			// 		&& TrigThreeMuonJpsi3p5mu2 == 1
-			// 		&& TrigThreeMuonJpsi == 1
 
-			// 		//pt cut
-			// 		&& rawMup4vect[0].Pt() >= 2.
-			// 		&& rawMup4vect[1].Pt() >= 2.
-			// 		&& rawMup4vect[2].Pt() >= 2.
-			// 		&& rawMup4vect[3].Pt() >= 2.
+		}
 
-			// 		&& abs(rawMup4vect[0].Eta()) <= 2.4
-			// 		&& abs(rawMup4vect[1].Eta()) <= 2.4
-			// 		&& abs(rawMup4vect[2].Eta()) <= 2.4
-			// 		&& abs(rawMup4vect[3].Eta()) <= 2.4
-
-					
-			// 	) {
-			// 	for (int mypidx = 0; mypidx < 3; mypidx++)  {
-			// 		int muIdxp11, muIdxp12, muIdxp21, muIdxp22;
-			// 		muIdxp11 = myCombIdx[mypidx].p11; muIdxp12 = myCombIdx[mypidx].p12; muIdxp21 = myCombIdx[mypidx].p21; muIdxp22 = myCombIdx[mypidx].p22;
-
-
-			// 		if(1
-            //                                     // Here, require the muon pairs to have muons with opposite charges
-			// 			 && fitMuCharge(muIdxp11) + fitMuCharge(muIdxp12) == 0 
-			// 			 && fitMuCharge(muIdxp21) + fitMuCharge(muIdxp22) == 0
-			// 		  )
-			// 		{
-			// 			// Modify the DiMuonMass expression appropriatly. 
-			// 			// Use the fitMup4vect and the muIdxpXY indexes defined above.
-			// 			DiMuonMass1 = 0; 
-			// 			DiMuonMass2 = 0;
-			// 			myDiMuon1mass->Fill(DiMuonMass1);
-			// 			myDiMuon2mass->Fill(DiMuonMass2);
-
-						// if (1
-						// 		// Here require that each DiMuonMass is in the appropriate mass range [2.95,3.25] GeV
-						// 								   )
-						// {
-						// 	// calculate the 4 muon mass:  M(µ1µ2µ3µ4)-M(µ1µ2)-M(µ3µ4)+2*M(J/psi)  
-						// 	m4Muon = 0;
-
-						// 	myFourMuonmass->Fill(m4Muon);
-
-					
-
-						// }
-					// }
-
-				// }
-			
+	}
 
 	cout << "I have done " << nentries << " total entries" << endl;
 	myhbk->Write();
 }
-
