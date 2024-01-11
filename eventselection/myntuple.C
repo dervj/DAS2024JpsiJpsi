@@ -295,5 +295,26 @@ void myntuple::Loop()
 
 	cout << "I have done " << nentries << " total entries" << endl;
 	myhbk->Write();
+
+	TFile *outFile = new TFile("myntuple_hists.root", "RECREATE");
+
+	myDiMuon1mass->Write("myDiMuon1mass");
+	myDiMuon2mass->Write("myDiMuon2mass");
+	myFourMuonmass->Write("myFourMuonmass");
+	myDiMuon1mass_PT->Write("myDiMuon1mass_PT");
+	myDiMuon2mass_PT->Write("myDiMuon2mass_PT");
+	myFourMuonmass_PT->Write("myFourMuonmass_PT");
+	myDiMuon1mass_eta->Write("myDiMuon1mass_eta");
+	myDiMuon2mass_eta->Write("myDiMuon2mass_eta");
+	myFourMuonmass_eta->Write("myFourMuonmass_eta");
+	myDiMuon1mass_chg->Write("myDiMuon1mass_chg");
+	myDiMuon2mass_chg->Write("myDiMuon2mass_chg");
+	myFourMuonmass_chg->Write("myFourMuonmass_chg");
+	myDiMuon1mass_mass->Write("myDiMuon1mass_mass");
+	myDiMuon2mass_mass->Write("myDiMuon2mass_mass");
+	myFourMuonmass_mass->Write("myFourMuonmass_mass");
+
+	outFile->Close();
+
 }
 
